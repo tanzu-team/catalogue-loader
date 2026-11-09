@@ -1,8 +1,11 @@
+.DS_Store
+**/.DS_Store
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+skills/
 
 ### STS ###
 .apt_generated
@@ -31,3 +34,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Python ###
+**/data/venv
+**/data/demo_site

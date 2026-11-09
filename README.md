@@ -85,7 +85,7 @@ docker compose down
 
 ### Upload Product Catalogue
 
-Upload a CSV file containing catalogue products (sample file available at `data/myntra_products_catalog.csv`):
+Upload a CSV file containing catalogue products (sample file available at `data/products.csv`):
 
 - **Endpoint**: `POST /api/v1/products/upload`
 - **Content-Type**: `multipart/form-data`
@@ -94,7 +94,7 @@ Upload a CSV file containing catalogue products (sample file available at `data/
 #### Example using `curl`:
 ```bash
 curl -X POST "http://localhost:8080/api/v1/products/upload" \
-  -F "file=@data/myntra_products_catalog.csv"
+  -F "file=@data/products.csv"
 ```
 
 #### Example using IntelliJ / VS Code HTTP Client (`data/upload.http`):
@@ -103,9 +103,9 @@ POST http://localhost:8080/api/v1/products/upload
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
-Content-Disposition: form-data; name="file"; filename="myntra_products_catalog.csv"
+Content-Disposition: form-data; name="file"; filename="products.csv"
 
-< ./myntra_products_catalog.csv
+< ./products.csv
 --boundary--
 ```
 

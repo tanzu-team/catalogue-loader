@@ -18,6 +18,7 @@ services:
     restart: unless-stopped
 
   catalogue-loader:
+    image: catalogue-loader:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -26,7 +27,7 @@ services:
       valkey:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "10001:10001"
     environment:
       - SPRING_DATA_REDIS_HOST=valkey
       - SPRING_DATA_REDIS_PORT=6379
@@ -39,5 +40,21 @@ services:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
+  redis-commander:
+    image: ghcr.io/joeferner/redis-commander:latest
+    container_name: redis-commander
+    depends_on:
+      valkey:
+        condition: service_healthy
+    ports:
+      - "10002:8081"
+    environment:
+      - REDIS_HOSTS=valkey:valkey:6379
+    restart: unless-stopped
+
 volumes:
   valkey-data:
+
+networks:
+  default:
+    name: ${VALKEY_NETWORK:-valkey-demo}

@@ -10,12 +10,16 @@
     </parent>
     <groupId>dev.cloudnative.retail</groupId>
     <artifactId>catalogue-loader</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0-Final</version>
     <name>catalogue-loader</name>
     <description>catalogue-loader</description>
     <properties>
         <java.version>17</java.version>
         <lombok.version>1.18.42</lombok.version>
+        <!-- Tells build-info to use the actual Maven build session start time. See https://reproducible-builds.org -->
+        <!-- If you remove this, Spring Boot will use fixed time - 1980-02-01T00:00:00Z -->
+        <!-- You can override in build-info goal not to add time to build-info.properties -->
+        <project.build.outputTimestamp>${maven.build.timestamp}</project.build.outputTimestamp>
     </properties>
     <dependencies>
         <dependency>
@@ -50,6 +54,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-resolver-dns-native-macos</artifactId>
             <version>4.2.19.Final</version>
@@ -80,6 +88,17 @@
                         </exclude>
                     </excludes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                        <!-- Enable, to not record time on build info. See https://reproducible-builds.org -->
+                        <!--<configuration>-->
+                        <!--<time>off</time>-->
+                        <!--</configuration>-->
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -3,15 +3,12 @@ package dev.cloudnative.retail.catalogue.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,14 +17,14 @@ public class ValkeyService {
 
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${app.loader.index-name}")
+    @Value("${app.loader.index-name:product_index}")
     private String indexName;
 
-    @Value("${app.loader.dimension}")
+    @Value("${app.loader.dimension:768}")
     private int dimension;
 
     /**
-     * Creates a HNSW index in Valkey.
+     * Creates a HNSW index in Valkey with multi-level category tags and numeric price/stock.
      */
     public void createIndex() {
         log.info("Creating Valkey index: {}", indexName);
@@ -40,12 +37,15 @@ public class ValkeyService {
                         "PREFIX".getBytes(StandardCharsets.UTF_8), "1".getBytes(StandardCharsets.UTF_8), "product:".getBytes(StandardCharsets.UTF_8),
                         "SCHEMA".getBytes(StandardCharsets.UTF_8),
                         "id".getBytes(StandardCharsets.UTF_8), "TAG".getBytes(StandardCharsets.UTF_8),
+                        "title".getBytes(StandardCharsets.UTF_8), "TEXT".getBytes(StandardCharsets.UTF_8),
                         "name".getBytes(StandardCharsets.UTF_8), "TEXT".getBytes(StandardCharsets.UTF_8),
                         "brand".getBytes(StandardCharsets.UTF_8), "TAG".getBytes(StandardCharsets.UTF_8),
+                        "category".getBytes(StandardCharsets.UTF_8), "TAG".getBytes(StandardCharsets.UTF_8), "SEPARATOR".getBytes(StandardCharsets.UTF_8), "|".getBytes(StandardCharsets.UTF_8),
+                        "categories".getBytes(StandardCharsets.UTF_8), "TAG".getBytes(StandardCharsets.UTF_8), "SEPARATOR".getBytes(StandardCharsets.UTF_8), "|".getBytes(StandardCharsets.UTF_8),
                         "gender".getBytes(StandardCharsets.UTF_8), "TAG".getBytes(StandardCharsets.UTF_8),
                         "price".getBytes(StandardCharsets.UTF_8), "NUMERIC".getBytes(StandardCharsets.UTF_8),
+                        "stock".getBytes(StandardCharsets.UTF_8), "NUMERIC".getBytes(StandardCharsets.UTF_8),
                         "description".getBytes(StandardCharsets.UTF_8), "TEXT".getBytes(StandardCharsets.UTF_8),
-                        "color".getBytes(StandardCharsets.UTF_8), "TAG".getBytes(StandardCharsets.UTF_8),
                         "vector".getBytes(StandardCharsets.UTF_8), "VECTOR".getBytes(StandardCharsets.UTF_8), "HNSW".getBytes(StandardCharsets.UTF_8), "6".getBytes(StandardCharsets.UTF_8),
                         "TYPE".getBytes(StandardCharsets.UTF_8), "FLOAT32".getBytes(StandardCharsets.UTF_8),
                         "DIM".getBytes(StandardCharsets.UTF_8), String.valueOf(dimension).getBytes(StandardCharsets.UTF_8),
@@ -73,12 +73,15 @@ public class ValkeyService {
             connection.commands().execute("HSET",
                     key.getBytes(StandardCharsets.UTF_8),
                     "id".getBytes(StandardCharsets.UTF_8), productId.getBytes(StandardCharsets.UTF_8),
-                    "name".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("name", "").getBytes(StandardCharsets.UTF_8),
-                    "brand".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("brand", "").getBytes(StandardCharsets.UTF_8),
-                    "gender".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("gender", "").getBytes(StandardCharsets.UTF_8),
-                    "price".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("price", "").getBytes(StandardCharsets.UTF_8),
+                    "title".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("title", metadata.getOrDefault("name", "")).getBytes(StandardCharsets.UTF_8),
+                    "name".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("title", metadata.getOrDefault("name", "")).getBytes(StandardCharsets.UTF_8),
+                    "price".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("price", "0.0").getBytes(StandardCharsets.UTF_8),
+                    "stock".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("stock", "10").getBytes(StandardCharsets.UTF_8),
                     "description".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("description", "").getBytes(StandardCharsets.UTF_8),
-                    "color".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("color", "").getBytes(StandardCharsets.UTF_8),
+                    "brand".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("brand", "General").getBytes(StandardCharsets.UTF_8),
+                    "category".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("category", metadata.getOrDefault("gender", "General")).getBytes(StandardCharsets.UTF_8),
+                    "categories".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("categories", metadata.getOrDefault("category", "General")).getBytes(StandardCharsets.UTF_8),
+                    "gender".getBytes(StandardCharsets.UTF_8), metadata.getOrDefault("category", metadata.getOrDefault("gender", "General")).getBytes(StandardCharsets.UTF_8),
                     "vector".getBytes(StandardCharsets.UTF_8), vectorBytes
             );
             return null;
